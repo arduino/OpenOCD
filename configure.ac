@@ -19,7 +19,7 @@ AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
-PKG_PROG_PKG_CONFIG([0.23])
+PKG_PROG_PKG_CONFIG([0.22])
 
 dnl disable checks for C++, Fortran and GNU Java Compiler
 m4_defun([_LT_AC_LANG_CXX_CONFIG], [:])
