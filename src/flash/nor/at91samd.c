@@ -590,6 +590,7 @@ static int samd_erase(struct flash_bank *bank, int first, int last)
 			return ERROR_FLASH_OPERATION_FAILED;
 		}
 
+		LOG_INFO("SAM Checking sector %d: is_erased=%d\n", s, bank->sectors[s].is_erased);
 		if (!bank->sectors[s].is_erased) {
 			/* For each row in that sector */
 			for (int r = s * rows_in_sector; r < (s + 1) * rows_in_sector; r++) {
