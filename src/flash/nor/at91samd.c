@@ -235,8 +235,14 @@ static int samd_protect_check(struct flash_bank *bank)
 		return res;
 
 	/* Lock bits are active-low */
-	for (int i = 0; i < bank->num_sectors; i++)
-		bank->sectors[i].is_protected = !(lock & (1<<i));
+	int boot_sectors = bank->num_sectors - SAMD_NUM_SECTORS;
+	for (int i = 0; i < bank->num_sectors; i++)	{
+		if (i < boot_sectors) {
+			bank->sectors[i].is_protected = !(lock & (1<<0));
+		} else {
+			bank->sectors[i].is_protected = !(lock & (1<<(i-boot_sectors)));
+		}
+	}
 
 	return ERROR_OK;
 }
@@ -304,17 +310,41 @@ static int samd_probe(struct flash_bank *bank)
 				part->flash_kb, chip->num_pages, chip->page_size);
 	}
 
+	/* Partition the first page into subpages, to allow debugging if boot sector is protected
+	 * The minimum boot page allowed is 2kb */
+	int boot_sectors = chip->sector_size / 2048;
+	int boot_offset = 0;
+
+	if (boot_sectors == 1) {
+		boot_sectors = 0;
+	}
+
 	/* Allocate the sector table */
-	bank->num_sectors = SAMD_NUM_SECTORS;
+	if (boot_sectors > 0) {
+		LOG_INFO("SAMD: partitioning the first flash page into %d subpages",
+				boot_sectors);
+		bank->num_sectors = SAMD_NUM_SECTORS + boot_sectors - 1;
+		boot_offset = chip->sector_size;
+	} else {
+		bank->num_sectors = SAMD_NUM_SECTORS;
+	}
+
 	bank->sectors = calloc(bank->num_sectors, sizeof((bank->sectors)[0]));
 	if (!bank->sectors)
 		return ERROR_FAIL;
 
-	/* Fill out the sector information: all SAMD sectors are the same size and
-	 * there is always a fixed number of them. */
-	for (int i = 0; i < bank->num_sectors; i++) {
+	/* Will be skipped if SAMD_BOOT_SECTORS == 0 */
+	for (int i = 0; i < boot_sectors; i++) {
+		bank->sectors[i].size = chip->sector_size / boot_sectors;
+		bank->sectors[i].offset = i * chip->sector_size / boot_sectors;
+		/* mark as unknown */
+		bank->sectors[i].is_erased = -1;
+		bank->sectors[i].is_protected = -1;
+	}
+
+	for (int i = boot_sectors; i < bank->num_sectors; i++) {
 		bank->sectors[i].size = chip->sector_size;
-		bank->sectors[i].offset = i * chip->sector_size;
+		bank->sectors[i].offset = ((i - boot_sectors) * chip->sector_size ) + boot_offset;
 		/* mark as unknown */
 		bank->sectors[i].is_erased = -1;
 		bank->sectors[i].is_protected = -1;
