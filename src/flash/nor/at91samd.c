@@ -517,6 +517,8 @@ static int samd_modify_user_row(struct target *target, uint32_t value,
 		goto out_user_row;
 	}
 
+	samd_issue_nvmctrl_command(target, SAMD_NVM_CMD_WAP);
+
 	/* Success */
 	res = ERROR_OK;
 
