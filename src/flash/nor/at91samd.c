@@ -940,6 +940,18 @@ COMMAND_HANDLER(samd_handle_eeprom_command)
 	return res;
 }
 
+COMMAND_HANDLER(samd_handle_restore_safe_command)
+{
+	uint32_t user_row_0_dfl = 0xD9FEC7FF;
+	uint32_t user_row_1_dfl = 0xFFFFFE5D;
+	int res = ERROR_OK;
+
+	struct target *target = get_current_target(CMD_CTX);
+	res = samd_modify_user_row(target, user_row_0_dfl, 0, 31);
+	res |= samd_modify_user_row(target, user_row_1_dfl, 32, 63);
+	return res;
+}
+
 COMMAND_HANDLER(samd_handle_bootloader_command)
 {
 	int res = ERROR_OK;
@@ -1046,6 +1058,12 @@ static const struct command_registration at91samd_exec_command_handlers[] = {
 			"Please see Table 20-2 of the SAMD20 datasheet for allowed values."
 			"Changes are stored immediately but take affect after the MCU is"
 			"reset.",
+	},
+	{
+		.name = "restore",
+		.handler = samd_handle_restore_safe_command,
+		.mode = COMMAND_EXEC,
+		.help = "Restores safe USER ROW (FUSES) values",
 	},
 	COMMAND_REGISTRATION_DONE
 };
