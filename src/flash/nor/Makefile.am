@@ -44,6 +44,7 @@ NOR_DRIVERS = \
 	mini51.c \
 	nuc1x.c \
 	nrf51.c \
+	nrf52.c \
 	mrvlqspi.c \
 	psoc4.c \
 	sim3x.c
