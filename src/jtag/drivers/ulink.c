@@ -1521,7 +1521,7 @@ int ulink_queue_scan(struct ulink *device, struct jtag_command *cmd)
 
 	/* Allocate TDO buffer if required */
 	if ((type == SCAN_IN) || (type == SCAN_IO)) {
-		tdo_buffer_start = calloc(sizeof(uint8_t), scan_size_bytes);
+		tdo_buffer_start = calloc(scan_size_bytes, sizeof(uint8_t));
 
 		if (tdo_buffer_start == NULL)
 			return ERROR_FAIL;
